@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\User;
 /*
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -18,11 +19,7 @@ Route::middleware('api.key')->group(function() {
     //Add prefix
     Route::prefix('v1/user')->group(function() {
 
-        Route::post('/signin', function(){
-            return response()->json([
-                'message' => 'Create new user'
-            ]);
-        });
+        Route::post('/signin', [User::class, 'register']);
 
         Route::post('/login', function(){
             return response()->json([
