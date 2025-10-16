@@ -21,11 +21,7 @@ Route::middleware('api.key')->group(function() {
 
         Route::post('/signin', [User::class, 'register']);
 
-        Route::post('/login', function(){
-            return response()->json([
-                'message' => 'Create new user'
-            ]);
-        });
+        Route::post('/login', [User::class, 'login']);
 
     });
 });
