@@ -2,13 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WebHookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User as UserModel;
 use Illuminate\Support\Facades\Hash;
 use App\Services\JWTService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use App\Models\Session;
 class User extends Controller
 {
+
+    private function getGeolocation($ipaddress){
+        try {
+            $reponse = http::timeout(5)->get("https://api.ipquery.io/{$ipaddress}");
+
+            if($reponse->successful()){
+                $data = $reponse->json();
+                return [
+                    'country' => $data['location']['country'] ?? null,
+                    'city' => $data['location']['city'] ?? null,
+                    'latitude' => $data['location']['latitude'] ?? null,
+                    'longitude' => $data['location']['longitude'] ?? null,
+                ];
+            }
+        } catch (\Exception $error) {
+        log::warning('Error when obtaining the Geolocation: '.$error->getMessage());
+        }
+
+        return [
+                    'country' => null,
+                    'city' =>  null,
+                    'latitude' =>  null,
+                    'longitude' =>  null,
+               ];
+    }
+
+
     public function register(Request $request){
         //We validate the data that we get from the request
 
@@ -39,12 +70,21 @@ class User extends Controller
                 'login_attempts' => 0,
             ]);
 
+            //Send welcome greeting
+            $webHookService = new WebHookService();
+            $webHookService->sendWelcomeEmail([
+                'type' => 'welcome_new_user',
+                'name' => $request->name,
+                'lastname' => $request->lastname,
+                'email' => $request->email
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'User registered successfully',
                 'data' => $user
             ], 201);
-            //code...
+
         } catch (\Exception $error) {
             return response()->json([
                 'status' => 'database_error',
@@ -57,7 +97,8 @@ class User extends Controller
     public function login(Request $request, JWTService $jwtService){
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|max:100',
-            'password' => 'required|string|min:8'
+            'password' => 'required|string|min:8',
+            'ip_public' => 'required|ip'
         ]);
 
         //Validation
@@ -112,6 +153,21 @@ class User extends Controller
             $user->last_login = now();
             $user->save();
 
+            //Register session geolocation
+            $ip_public = $request->ip_public;
+            $geoData = $this->getGeolocation($ip_public);
+
+            //Save the data inside the table sessions
+            Session::create([
+                'user_id' => $user->id,
+                'ip_address' => $ip_public,
+                'country' => $geoData['country'],
+                'city' => $geoData['city'],
+                'latitude' => $geoData['latitude'],
+                'longitude' => $geoData['longitude']
+            ]);
+
+
             //Generate tokens
             $tokenPayload = [
                 'user_id' => $user->id,
@@ -120,6 +176,17 @@ class User extends Controller
             ];
 
             $tokens = $jwtService->generateTokenPair($tokenPayload);
+
+             //Send welcome greeting
+            $webHookService = new WebHookService();
+            $webHookService->sendLoginSession([
+                'type' => 'login_session',
+                'name' => $request->name,
+                'lastname' => $request->lastname,
+                'email' => $request->email,
+                'country' => $geoData['country'],
+                'city' => $geoData['city']
+            ]);
 
             return response()->json([
                 'status' => 'success',
