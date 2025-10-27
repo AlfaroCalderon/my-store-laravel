@@ -23,5 +23,8 @@ Route::middleware('api.key')->group(function() {
 
         Route::post('/login', [User::class, 'login']);
 
+        //Get user by id
+        Route::get('/{id}', [User::class, 'getUserById'])->middleware('jwt.auth');
+
     });
 });

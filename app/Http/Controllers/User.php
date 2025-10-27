@@ -201,4 +201,42 @@ class User extends Controller
             ],500);
         }
     }
+
+    public function getUserById(Request $request, $id){
+        try {
+
+            //We search the user
+            $user = UserModel::find($id);
+            //We verify if the user exist
+            if(!$user){
+                return response()->json([
+                    'status' => 'user_not_found',
+                    'message' => 'User not found'
+                ],400);
+            }
+
+            //Return the user info
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'lastname' => $user->lastname,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'is_active' => $user->is_active,
+                    'last_login' => $user->last_login,
+                    'login_attempts' => $user->login_attempts,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ]
+            ],200);
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'status' => 'database_error',
+                'errors' => $error->getMessage()
+            ],500);
+        }
+    }
 }

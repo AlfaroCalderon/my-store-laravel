@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         //We register the personalized middleware
         $middleware->alias([
-            'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class
+            'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class,
+            'jwt.auth' => \App\Http\Middleware\JWTAuthMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
