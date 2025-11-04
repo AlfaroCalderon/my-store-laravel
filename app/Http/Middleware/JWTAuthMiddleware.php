@@ -47,13 +47,21 @@ class JWTAuthMiddleware
                     'message' => 'Invalid token type'
                 ],401);
             }
+
+            // Add the user information to the request
+            $request->merge([
+                'auth_user_id' => $decoded->user_id ?? null,
+                'auth_role' => $decoded->auth_role ?? null,
+                'auth_email' => $decoded->email ?? null
+            ]);
+
             // If the token is valid, we allow the request to proceed
             return $next($request);
         } catch (\Exception $error) {
             return response()->json([
-                'status' => 'unathorized',
-                'message' => 'Invalid or expired token' . $error->getMessage()
-            ]);
+                'status' => 'unauthorized',
+                'message' => 'Invalid or expired token: ' . $error->getMessage()
+            ], 401);
         }
 
 

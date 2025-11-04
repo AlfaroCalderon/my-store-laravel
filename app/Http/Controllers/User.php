@@ -172,7 +172,7 @@ class User extends Controller
             $tokenPayload = [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'role' => $user->role
+                'auth_role' => $user->role
             ];
 
             $tokens = $jwtService->generateTokenPair($tokenPayload);
@@ -205,6 +205,8 @@ class User extends Controller
     public function getUserById(Request $request, $id){
         try {
 
+            $sessions = UserModel::find($id)->sessions;
+
             //We search the user
             $user = UserModel::find($id);
             //We verify if the user exist
@@ -228,7 +230,8 @@ class User extends Controller
                     'last_login' => $user->last_login,
                     'login_attempts' => $user->login_attempts,
                     'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at
+                    'updated_at' => $user->updated_at,
+                    'sessions' => $sessions
                 ]
             ],200);
 

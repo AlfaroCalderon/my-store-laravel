@@ -15,6 +15,9 @@ class ApiKeyMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        //Force the request to accept json responses
+        $request->headers->set('Accept', 'application/json');
+
         //We get the header of the request
         $apikey = $request->header('X-API-Key');
 

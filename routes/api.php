@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User;
+use App\Http\Controllers\ProductsController;
 /*
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,4 +28,11 @@ Route::middleware('api.key')->group(function() {
         Route::get('/{id}', [User::class, 'getUserById'])->middleware('jwt.auth');
 
     });
-});
+
+     Route::prefix('v1/products')->middleware('jwt.auth')->group(function() {
+        Route::post('/', [ProductsController::class,'store'])->middleware('manager');
+  });
+
+  });
+
+

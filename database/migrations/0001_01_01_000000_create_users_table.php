@@ -20,11 +20,11 @@ return new class extends Migration
             $table->dateTime('last_login')->nullable();
             $table->integer('login_attempts')->default(0);
             $table->boolean('is_active')->default(true);
-            $table->enum('role', ['manage', 'user'])->default('user');
+            $table->enum('role', ['manager', 'user'])->default('user');
             $table->timestamps();
         });
 
-        Schema::create('sessions', function (Blueprint $table) {
+         Schema::create('user_sessions', function (Blueprint $table) {
            $table->id();
            $table->foreignId('user_id')->constrained('users');
            $table->string('ip_address',45)->nullable();
@@ -34,6 +34,17 @@ return new class extends Migration
            $table->string('longitude',70)->nullable();
            $table->timestamps();
         });
+
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+
     }
 
     /**
@@ -43,5 +54,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
+         Schema::dropIfExists('user_sessions');
     }
 };
