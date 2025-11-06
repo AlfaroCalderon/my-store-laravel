@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ImageController;
+use Cloudinary\Asset\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User;
@@ -27,10 +29,15 @@ Route::middleware('api.key')->group(function() {
         //Get user by id
         Route::get('/{id}', [User::class, 'getUserById'])->middleware('jwt.auth');
 
+        //Refresh token
+        Route::post('/refresh-token', [User::class, 'refreshToken'])->middleware('jwt.auth');
+
     });
 
      Route::prefix('v1/products')->middleware('jwt.auth')->group(function() {
+        Route::get('/', [ProductsController::class, 'index']);
         Route::post('/', [ProductsController::class,'store'])->middleware('manager');
+        Route::post('/upload-image', [ImageController::class,'upload']);
   });
 
   });

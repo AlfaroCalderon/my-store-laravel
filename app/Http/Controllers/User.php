@@ -242,4 +242,61 @@ class User extends Controller
             ],500);
         }
     }
+
+    public function refreshToken(Request $request, JWTService $jWTService){
+        //lets validate that the refreshToekn exist
+        $validator = Validator::make($request->all(), [
+            'refresh_token' => 'required|string'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'status' => 'validation_error',
+                'message' => $validator->errors()
+            ],422);
+        }
+
+        try {
+
+        // Decode the refresh token
+        $decode = $jWTService->decodeRefreshToken($request->refresh_token);
+
+        if($decode->type !== 'refresh_token'){
+            return response()->json([
+                'status' => 'unauthorized',
+                'message' => 'Invalid token type'
+            ],401);
+        }
+
+        $user = UserModel::find($decode->user_id);
+
+        if(!$user || !$user->is_active){
+            return response()->json([
+                'status' => 'unauthorized',
+                'message' => 'User not found or inactive'
+            ],401);
+        }
+
+        $payload = [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'auth_role' => $user->role
+        ];
+
+        $tokens = $jWTService->generateAccessToken($payload);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Token refreshed successfully',
+            'access_token' => $tokens
+        ],200);
+
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'status' => 'database_error',
+                'errors' => $error->getMessage()
+            ],500);
+        }
+    }
 }

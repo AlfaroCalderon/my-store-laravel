@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Products;
 use App\Http\Requests\StoreProductsRequest;
 use App\Http\Requests\UpdateProductsRequest;
+use Illuminate\Support\Facades\Validator;
 
 class ProductsController extends Controller
 {
@@ -13,7 +14,11 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        //
+        $products = Products::with('user:id,name,email')->get();
+        return response()->json([
+            'status' => 'success',
+            'data' => $products
+        ], 200);
     }
 
     /**
@@ -29,7 +34,17 @@ class ProductsController extends Controller
      */
     public function store(StoreProductsRequest $request)
     {
-        $product = Products::create($request->validated());
+        $validated = $request->validated();
+
+        //validate user_id exists
+        if(!isset($validated['user_id'])){
+           $validated['user_id'] = $request->input('auth_user_id');
+        }
+
+        $product= Products::create($validated);
+
+        //Load user relationship
+        $product->load('user:name,email');
         return response()->json([
             'status' => 'success',
             'data' => $product
