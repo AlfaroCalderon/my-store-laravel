@@ -244,7 +244,7 @@ class User extends Controller
     }
 
     public function refreshToken(Request $request, JWTService $jWTService){
-        //lets validate that the refreshToekn exist
+        //lets validate that the refreshToken exist
         $validator = Validator::make($request->all(), [
             'refresh_token' => 'required|string'
         ]);
@@ -291,6 +291,44 @@ class User extends Controller
             'access_token' => $tokens
         ],200);
 
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'status' => 'database_error',
+                'errors' => $error->getMessage()
+            ],500);
+        }
+    }
+
+
+    public function validateAccessToken(Request $request, JWTService $jwtservice){
+        //lets validate that the access_token exist
+        $validator = Validator::make($request->all(), [
+            'access_token' => 'required|string'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'status' => 'validation_error',
+                'message' => $validator->errors()
+            ],422);
+        }
+
+        try {
+            $decode = $jwtservice->decodeAccessToken($request->access_token);
+
+            if($decode->type !== 'access_token'){
+                return response()->json([
+                    'status' => 'Invalid_token',
+                    'message' => 'Invalid token type'
+
+                ],401);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Token is valid',
+            ],200);
 
         } catch (\Exception $error) {
             return response()->json([

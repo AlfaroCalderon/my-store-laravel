@@ -30,7 +30,10 @@ Route::middleware('api.key')->group(function() {
         Route::get('/{id}', [User::class, 'getUserById'])->middleware('jwt.auth');
 
         //Refresh token
-        Route::post('/refresh-token', [User::class, 'refreshToken'])->middleware('jwt.auth');
+        Route::post('/refresh-token', [User::class, 'refreshToken']);
+
+        //Validate access token
+        Route::post('/validate-token', [User::class, 'validateAccessToken']);
 
     });
 
